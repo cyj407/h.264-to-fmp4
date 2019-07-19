@@ -31,13 +31,13 @@ class Wfs {
  
   static get DefaultConfig() {
     if(!Wfs.defaultConfig) {
-       Wfs.defaultConfig = {
+      Wfs.defaultConfig = {
         autoStartLoad: true,
         startPosition: -1,
         debug: false, 
         fLoader: undefined,
         loader: XhrLoader,
-        //loader: FetchLoader,
+        // loader: FetchLoader,
         fmp4FileUrl: 'xxxx.mp4',
         fragLoadingTimeOut: 20000,
         fragLoadingMaxRetry: 6,
@@ -59,8 +59,8 @@ class Wfs {
 
     var defaultConfig = Wfs.DefaultConfig;
     for (var prop in defaultConfig) {
-        if (prop in config) { continue; }
-        config[prop] = defaultConfig[prop];
+      if (prop in config) { continue; }
+      config[prop] = defaultConfig[prop];
     }
     this.config = config;  
     // observer setup
@@ -78,26 +78,29 @@ class Wfs {
 
     this.flowController = new FlowController(this);
     this.bufferController = new BufferController(this);
-  //  this.fileLoader = new FileLoader(this);
+    // this.fileLoader = new FileLoader(this);
     this.websocketLoader = new WebsocketLoader(this);
-    this.mediaType = undefined;     
+    this.mediaType = undefined;
   }
 
   destroy() {
     this.flowController.destroy();
     this.bufferController.destroy();
- //   this.fileLoader.destroy();
+    // this.fileLoader.destroy();
     this.websocketLoader.destroy();
   }
 
-  attachMedia(media, channelName='chX',mediaType='H264Raw', websocketName='play2') { // 'H264Raw' 'FMp4'    
+  // attachMedia(media, ip, port, /*channelName='chX',*/mediaType='H264Raw', websocketName='play2') { // 'H264Raw' 'FMp4'    
+  attachMedia(media, ip, port, mediaType='H264Raw', websocketName='play2') { // 'H264Raw' 'FMp4'    
     this.mediaType = mediaType; 
     this.media = media;
-    this.trigger(Event.MEDIA_ATTACHING, {media:media, channelName:channelName, mediaType:mediaType, websocketName:websocketName });
+    this.trigger(Event.MEDIA_ATTACHING, {media:media, ip:ip, port:port,/*channelName:channelName,*/ mediaType:mediaType, websocketName:websocketName });
   }
   
-  attachWebsocket(websocket,channelName) { 
-    this.trigger(Event.WEBSOCKET_ATTACHING, {websocket: websocket, mediaType:this.mediaType, channelName:channelName });
+  // attachWebsocket(websocket,channelName) { 
+  attachWebsocket(websocket, ip, port) { 
+    this.trigger(Event.WEBSOCKET_ATTACHING, {websocket: websocket, mediaType:this.mediaType, ip: ip, port: port });
+    // this.trigger(Event.WEBSOCKET_ATTACHING, {websocket: websocket, mediaType:this.mediaType, ip: ip, port: port/*channelName:channelName*/ });
   }
 
 }

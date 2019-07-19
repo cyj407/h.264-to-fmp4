@@ -33,7 +33,9 @@ class BufferController extends EventHandler {
     this.mediaType = 'H264Raw';
 
     this.websocketName = undefined; 
-    this.channelName = undefined;
+    this.ip = undefined;
+    this.port = undefined;
+    // this.channelName = undefined;
   }
 
   destroy() {
@@ -44,7 +46,9 @@ class BufferController extends EventHandler {
     let media = this.media = data.media;
     this.mediaType = data.mediaType;
     this.websocketName = data.websocketName;
-    this.channelName = data.channelName;
+    // this.channelName = data.channelName;
+    this.ip = data.ip;
+    this.port = data.port;
     if (media) {
       // setup the media source
       var ms = this.mediaSource = new MediaSource();
@@ -78,7 +82,7 @@ class BufferController extends EventHandler {
   }
 
   onMediaSourceEnded() {
-    console.log('media source ended');
+    //console.log('media source ended');
   }
 
   onSBUpdateEnd(event) { 
@@ -88,19 +92,21 @@ class BufferController extends EventHandler {
       this.media.play();  
     }
 
+    /*
     console.log("currentTime: " + this.media.currentTime);
     var buffered = this.sourceBuffer['video'].buffered;
     var played   = this.media.played;
     for(var j = 0; j < played.length; j++){
-	console.log("played start: " + played.start(j) );
-	console.log("played end: " + played.end(j) );
+	    console.log("played start: " + played.start(j) );
+	    console.log("played end: " + played.end(j) );
     }
     console.log("readystate: " + this.media.readyState);
     for(var i=0; i< buffered.length; i++){
-	console.log("start: " + buffered.start(i) );
-	console.log("end: " + buffered.end(i));
-    	//this.media.currentTime = buffered.end(i); 
+	    console.log("start: " + buffered.start(i) );
+	    console.log("end: " + buffered.end(i));
+    	// this.media.currentTime = buffered.end(i); 
     }
+    */
 
     this.appending = false;
     this.doAppending();
@@ -122,7 +128,8 @@ class BufferController extends EventHandler {
       this.checkPendingTracks();
     }
 
-    this.wfs.trigger(Event.MEDIA_ATTACHED, {media:this.media, channelName:this.channelName, mediaType: this.mediaType, websocketName:this.websocketName});
+    this.wfs.trigger(Event.MEDIA_ATTACHED, {media:this.media, ip:this.ip, port:this.port, mediaType: this.mediaType, websocketName:this.websocketName});
+    // this.wfs.trigger(Event.MEDIA_ATTACHED, {media:this.media, ip:this.ip, port:this.port,/*channelName:this.channelName,*/ mediaType: this.mediaType, websocketName:this.websocketName});
   }
 
   checkPendingTracks() {  
@@ -141,7 +148,7 @@ class BufferController extends EventHandler {
     let mimeType;
     if (tracks.mimeType === ''){
       mimeType = 'video/mp4;codecs=avc1.420028'; // avc1.42c01f avc1.42801e avc1.640028 avc1.420028
-    }else{
+    } else{
       mimeType = 'video/mp4;codecs=' + tracks.mimeType;
     }
  
@@ -172,7 +179,7 @@ class BufferController extends EventHandler {
          
       if (segments && segments.length) { 
         var segment = segments.shift();
-	//console.log("segments len: " + segments.length + " segment len: " + segment.data.length);
+	      // console.log("segments len: " + segments.length + " segment len: " + segment.data.length);
         try {
           if(sourceBuffer[segment.type]) { 
             this.parent = segment.parent;
@@ -180,8 +187,6 @@ class BufferController extends EventHandler {
             this.appendError = 0;
             this.appended++;
             this.appending = true;
-          } else {
-  
           }
         } catch(err) {
           // in case any error occured while appending, put back segment in segments table 

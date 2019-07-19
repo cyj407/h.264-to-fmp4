@@ -107,12 +107,12 @@ func (conn *Connection) appReadCommand2() {
         u := map[string]interface{}{}   
         json.Unmarshal(message, &u)   
         if u["t"].(string) == "open"{
-             fmt.Println("appReadCommand--> ",u["t"].(string), u["v"].(string) , u["c"].(string))
+            //  fmt.Println("appReadCommand--> ",u["t"].(string), u["v"].(string) , u["c"].(string))
 
-            if u["c"].(string) =="ch1"{
+            // if u["c"].(string) =="ch1"{
             conn.file264DataName = "car.h264"
             conn.file264SizeName = "car.txt"
-           }
+          //  }
 /*
            if u["c"].(string) =="ch2"{
             conn.file264DataName = "yyyyyyy.264"

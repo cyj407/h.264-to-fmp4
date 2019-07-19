@@ -17,7 +17,9 @@ class WebsocketLoader extends EventHandler {
     this.buf = null;
     this.h264Demuxer = new H264Demuxer(wfs);    
     this.mediaType = undefined; 
-    this.channelName = undefined; 
+    this.ip = undefined;
+    this.port = undefined;
+    // this.channelName = undefined; 
   }
  
   destroy() { 
@@ -25,13 +27,15 @@ class WebsocketLoader extends EventHandler {
   }
 
   onWebsocketAttaching(data) {
-  	this.mediaType = data.mediaType; 
-  	this.channelName = data.channelName;  
+    this.mediaType = data.mediaType; 
+    this.ip = data.ip;
+    this.port = data.port;
+  	// this.channelName = data.channelName;  
     if( data.websocket instanceof WebSocket ) {
       this.client = data.websocket;
       this.client.onopen = this.initSocketClient.bind(this);   
       this.client.onclose = function(e) {
-          console.log('Websocket Disconnected!');
+        console.log('Websocket Disconnected!');
       }; 
     }    
   }
@@ -39,23 +43,24 @@ class WebsocketLoader extends EventHandler {
   initSocketClient(client){
     this.client.binaryType = 'arraybuffer';
     this.client.onmessage = this.receiveSocketMessage.bind(this);
-    this.wfs.trigger(Event.WEBSOCKET_MESSAGE_SENDING, {commandType: "open", channelName:this.channelName, commandValue:"NA" });
+    this.wfs.trigger(Event.WEBSOCKET_MESSAGE_SENDING, {commandType: "open", commandValue:"NA" });
+    // this.wfs.trigger(Event.WEBSOCKET_MESSAGE_SENDING, {commandType: "open", /*channelName:this.channelName,*/ commandValue:"NA" });
     console.log('Websocket Open!'); 
   }
  
   receiveSocketMessage( event ){
     var buffer = new Uint8Array(event.data);
-    //console.log(buffer.length);
+    // console.log(buffer.length);
     var newBuffer;
     if(this.buf){
       newBuffer = new Uint8Array(this.buf.byteLength + buffer.byteLength);
       newBuffer.set(this.buf);
       newBuffer.set(buffer, this.buf.byteLength);
-      //console.log(newBuffer.length);
-    }
-    else
+      // console.log(newBuffer.length);
+    } else {
       newBuffer = new Uint8Array(buffer);
-    //get len
+    }
+    // get len
     var offset = 0;
     var lenView = new DataView(newBuffer.buffer);
     var len = lenView.getUint32(0);  
@@ -63,27 +68,27 @@ class WebsocketLoader extends EventHandler {
       console.log("frames, len:" + len);
       var copy = newBuffer.subarray(4, len+4);
       this.wfs.trigger(Event.H264_DATA_PARSING, {data: copy});
-      //var copy2 = new Uint8Array(0);
-      //this.wfs.trigger(Event.H264_DATA_PARSING, {data: copy2});
-      //this.wfs.trigger(Event.H264_DATA_PARSING, {data: copy2});
+      // var copy2 = new Uint8Array(0);
+      // this.wfs.trigger(Event.H264_DATA_PARSING, {data: copy2});
+      // this.wfs.trigger(Event.H264_DATA_PARSING, {data: copy2});
       newBuffer = newBuffer.subarray(len+4);
       offset  += (len+4);
       len = lenView.getUint32(offset);
-      //get len
+      // get len
     }
     if(len === newBuffer.byteLength - 4){
       var copy = newBuffer.subarray(4,len+4);
       this.wfs.trigger(Event.H264_DATA_PARSING,{data:copy});
-      //var copy2 = new Uint8Array(0);
-      //this.wfs.trigger(Event.H264_DATA_PARSING,{data:copy2});
-      //this.wfs.trigger(Event.H264_DATA_PARSING,{data:copy2});
+      // var copy2 = new Uint8Array(0);
+      // this.wfs.trigger(Event.H264_DATA_PARSING,{data:copy2});
+      // this.wfs.trigger(Event.H264_DATA_PARSING,{data:copy2});
       this.buf = null;
-    }
-    else
+    } else {
       this.buf = new Uint8Array(newBuffer);
-    
-	this.buf = new Uint8Array(event.data, 4);
-    //this.buf = new Uint8Array(event.data);
+    }
+
+	  this.buf = new Uint8Array(event.data, 4);
+    // this.buf = new Uint8Array(event.data);
     var buf_crc = new Uint8Array(event.data, 0, 4);
     var copy = new Uint8Array(this.buf);  
     
@@ -91,20 +96,25 @@ class WebsocketLoader extends EventHandler {
       this.wfs.trigger(Event.WEBSOCKET_ATTACHED, {payload: copy });
     } 
     if (this.mediaType === 'H264Raw'){
-      console.log(copy.length);
+      // console.log(copy.length);
       var crc16 = crc.crc16;
       var crc32 = crc.crc32;
       var crc_s = crc16(copy);
       var buf_crc_s =  (buf_crc.map(String.fromCharCode)).join("");
+      
+      /*
       if(String.fromCharCode(buf_crc[0]) == crc_s[0] &&
-	 String.fromCharCode(buf_crc[1]) == crc_s[1] &&
-	 String.fromCharCode(buf_crc[2]) == crc_s[2] &&
-	 String.fromCharCode(buf_crc[3]) == crc_s[3]){
-	//		console.log("equal");	
+      String.fromCharCode(buf_crc[1]) == crc_s[1] &&
+      String.fromCharCode(buf_crc[2]) == crc_s[2] &&
+      String.fromCharCode(buf_crc[3]) == crc_s[3]){
+	      // console.log("equal");	
       }
-      else
-	console.log("not equal");
-     // console.log(crc_s);
+      else {
+        // console.log("not equal");
+      }
+      // console.log(crc_s);
+      */
+      
       this.wfs.trigger(Event.H264_DATA_PARSING, {data: copy });
     }
  
@@ -115,7 +125,8 @@ class WebsocketLoader extends EventHandler {
   }
   
   onWebsocketMessageSending( event ){  
-    this.client.send( JSON.stringify({ t: event.commandType, c:event.channelName, v: event.commandValue  }) );
+    this.client.send( JSON.stringify({ t: event.commandType, v: event.commandValue  }) );
+    // this.client.send( JSON.stringify({ t: event.commandType, /*c:event.channelName,*/ v: event.commandValue  }) );
   }
 
 }

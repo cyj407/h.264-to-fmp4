@@ -21,8 +21,10 @@ class FlowController extends EventHandler {
     this.fileStart = 0;
     this.fileEnd = 0;
     this.pendingAppending = 0;
-    this.mediaType = undefined; 
-    channelName:this.channelName;
+    this.mediaType = undefined;
+    this.ip = undefined;
+    this.port = undefined; 
+    // channelName:this.channelName;
   }
 
   destroy() {
@@ -31,13 +33,13 @@ class FlowController extends EventHandler {
 
   onMediaAttached(data) {      
     if (data.websocketName != undefined){
-      var client = new WebSocket( 'ws://' + window.location.host + '/' +  data.websocketName );
-      //var uri = 'ws://' + '192.168.2.51:10010';
-      //var protocol = 'binary';
-      //var client = new WebSocket(uri,protocol);
-      this.wfs.attachWebsocket(client,data.channelName);
+      // var client = new WebSocket( 'ws://' + window.location.host + '/' +  data.websocketName );
+      var client = new WebSocket( 'ws://' + data.ip + ':' + data.port + '/' +  data.websocketName );
+      console.log('ws://' + data.ip + ':' + data.port + '/' +  data.websocketName);
+      // this.wfs.attachWebsocket(client,data.channelName);
+      this.wfs.attachWebsocket(client, data.ip, data.port);
     }else{
-       console.log('websocketName ERROE!!!');
+       console.log('websocketName ERROR!!!');
     }
 
   }

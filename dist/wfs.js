@@ -542,7 +542,9 @@ var BufferController = function (_EventHandler) {
     _this.mediaType = 'H264Raw';
 
     _this.websocketName = undefined;
-    _this.channelName = undefined;
+    _this.ip = undefined;
+    _this.port = undefined;
+    // this.channelName = undefined;
     return _this;
   }
 
@@ -557,7 +559,9 @@ var BufferController = function (_EventHandler) {
       var media = this.media = data.media;
       this.mediaType = data.mediaType;
       this.websocketName = data.websocketName;
-      this.channelName = data.channelName;
+      // this.channelName = data.channelName;
+      this.ip = data.ip;
+      this.port = data.port;
       if (media) {
         // setup the media source
         var ms = this.mediaSource = new MediaSource();
@@ -593,7 +597,7 @@ var BufferController = function (_EventHandler) {
   }, {
     key: 'onMediaSourceEnded',
     value: function onMediaSourceEnded() {
-      console.log('media source ended');
+      //console.log('media source ended');
     }
   }, {
     key: 'onSBUpdateEnd',
@@ -604,19 +608,21 @@ var BufferController = function (_EventHandler) {
         this.media.play();
       }
 
+      /*
       console.log("currentTime: " + this.media.currentTime);
       var buffered = this.sourceBuffer['video'].buffered;
-      var played = this.media.played;
-      for (var j = 0; j < played.length; j++) {
-        console.log("played start: " + played.start(j));
-        console.log("played end: " + played.end(j));
+      var played   = this.media.played;
+      for(var j = 0; j < played.length; j++){
+       console.log("played start: " + played.start(j) );
+       console.log("played end: " + played.end(j) );
       }
       console.log("readystate: " + this.media.readyState);
-      for (var i = 0; i < buffered.length; i++) {
-        console.log("start: " + buffered.start(i));
-        console.log("end: " + buffered.end(i));
-        //this.media.currentTime = buffered.end(i); 
+      for(var i=0; i< buffered.length; i++){
+       console.log("start: " + buffered.start(i) );
+       console.log("end: " + buffered.end(i));
+      	// this.media.currentTime = buffered.end(i); 
       }
+      */
 
       this.appending = false;
       this.doAppending();
@@ -638,7 +644,8 @@ var BufferController = function (_EventHandler) {
         this.checkPendingTracks();
       }
 
-      this.wfs.trigger(_events2.default.MEDIA_ATTACHED, { media: this.media, channelName: this.channelName, mediaType: this.mediaType, websocketName: this.websocketName });
+      this.wfs.trigger(_events2.default.MEDIA_ATTACHED, { media: this.media, ip: this.ip, port: this.port, mediaType: this.mediaType, websocketName: this.websocketName });
+      // this.wfs.trigger(Event.MEDIA_ATTACHED, {media:this.media, ip:this.ip, port:this.port,/*channelName:this.channelName,*/ mediaType: this.mediaType, websocketName:this.websocketName});
     }
   }, {
     key: 'checkPendingTracks',
@@ -693,7 +700,7 @@ var BufferController = function (_EventHandler) {
 
         if (segments && segments.length) {
           var segment = segments.shift();
-          //console.log("segments len: " + segments.length + " segment len: " + segment.data.length);
+          // console.log("segments len: " + segments.length + " segment len: " + segment.data.length);
           try {
             if (sourceBuffer[segment.type]) {
               this.parent = segment.parent;
@@ -701,7 +708,7 @@ var BufferController = function (_EventHandler) {
               this.appendError = 0;
               this.appended++;
               this.appending = true;
-            } else {}
+            }
           } catch (err) {
             // in case any error occured while appending, put back segment in segments table 
             segments.unshift(segment);
@@ -776,7 +783,9 @@ var FlowController = function (_EventHandler) {
     _this.fileEnd = 0;
     _this.pendingAppending = 0;
     _this.mediaType = undefined;
-    channelName: _this.channelName;
+    _this.ip = undefined;
+    _this.port = undefined;
+    // channelName:this.channelName;
     return _this;
   }
 
@@ -789,13 +798,13 @@ var FlowController = function (_EventHandler) {
     key: 'onMediaAttached',
     value: function onMediaAttached(data) {
       if (data.websocketName != undefined) {
-        var client = new WebSocket('ws://' + window.location.host + '/' + data.websocketName);
-        //var uri = 'ws://' + '192.168.2.51:10010';
-        //var protocol = 'binary';
-        //var client = new WebSocket(uri,protocol);
-        this.wfs.attachWebsocket(client, data.channelName);
+        // var client = new WebSocket( 'ws://' + window.location.host + '/' +  data.websocketName );
+        var client = new WebSocket('ws://' + data.ip + ':' + data.port + '/' + data.websocketName);
+        console.log('ws://' + data.ip + ':' + data.port + '/' + data.websocketName);
+        // this.wfs.attachWebsocket(client,data.channelName);
+        this.wfs.attachWebsocket(client, data.ip, data.port);
       } else {
-        console.log('websocketName ERROE!!!');
+        console.log('websocketName ERROR!!!');
       }
     }
   }, {
@@ -2114,7 +2123,9 @@ var WebsocketLoader = function (_EventHandler) {
     _this.buf = null;
     _this.h264Demuxer = new _h264Demuxer2.default(wfs);
     _this.mediaType = undefined;
-    _this.channelName = undefined;
+    _this.ip = undefined;
+    _this.port = undefined;
+    // this.channelName = undefined; 
     return _this;
   }
 
@@ -2127,7 +2138,9 @@ var WebsocketLoader = function (_EventHandler) {
     key: 'onWebsocketAttaching',
     value: function onWebsocketAttaching(data) {
       this.mediaType = data.mediaType;
-      this.channelName = data.channelName;
+      this.ip = data.ip;
+      this.port = data.port;
+      // this.channelName = data.channelName;  
       if (data.websocket instanceof WebSocket) {
         this.client = data.websocket;
         this.client.onopen = this.initSocketClient.bind(this);
@@ -2141,22 +2154,25 @@ var WebsocketLoader = function (_EventHandler) {
     value: function initSocketClient(client) {
       this.client.binaryType = 'arraybuffer';
       this.client.onmessage = this.receiveSocketMessage.bind(this);
-      this.wfs.trigger(_events2.default.WEBSOCKET_MESSAGE_SENDING, { commandType: "open", channelName: this.channelName, commandValue: "NA" });
+      this.wfs.trigger(_events2.default.WEBSOCKET_MESSAGE_SENDING, { commandType: "open", commandValue: "NA" });
+      // this.wfs.trigger(Event.WEBSOCKET_MESSAGE_SENDING, {commandType: "open", /*channelName:this.channelName,*/ commandValue:"NA" });
       console.log('Websocket Open!');
     }
   }, {
     key: 'receiveSocketMessage',
     value: function receiveSocketMessage(event) {
       var buffer = new Uint8Array(event.data);
-      //console.log(buffer.length);
+      // console.log(buffer.length);
       var newBuffer;
       if (this.buf) {
         newBuffer = new Uint8Array(this.buf.byteLength + buffer.byteLength);
         newBuffer.set(this.buf);
         newBuffer.set(buffer, this.buf.byteLength);
-        //console.log(newBuffer.length);
-      } else newBuffer = new Uint8Array(buffer);
-      //get len
+        // console.log(newBuffer.length);
+      } else {
+        newBuffer = new Uint8Array(buffer);
+      }
+      // get len
       var offset = 0;
       var lenView = new DataView(newBuffer.buffer);
       var len = lenView.getUint32(0);
@@ -2164,25 +2180,27 @@ var WebsocketLoader = function (_EventHandler) {
         console.log("frames, len:" + len);
         var copy = newBuffer.subarray(4, len + 4);
         this.wfs.trigger(_events2.default.H264_DATA_PARSING, { data: copy });
-        //var copy2 = new Uint8Array(0);
-        //this.wfs.trigger(Event.H264_DATA_PARSING, {data: copy2});
-        //this.wfs.trigger(Event.H264_DATA_PARSING, {data: copy2});
+        // var copy2 = new Uint8Array(0);
+        // this.wfs.trigger(Event.H264_DATA_PARSING, {data: copy2});
+        // this.wfs.trigger(Event.H264_DATA_PARSING, {data: copy2});
         newBuffer = newBuffer.subarray(len + 4);
         offset += len + 4;
         len = lenView.getUint32(offset);
-        //get len
+        // get len
       }
       if (len === newBuffer.byteLength - 4) {
         var copy = newBuffer.subarray(4, len + 4);
         this.wfs.trigger(_events2.default.H264_DATA_PARSING, { data: copy });
-        //var copy2 = new Uint8Array(0);
-        //this.wfs.trigger(Event.H264_DATA_PARSING,{data:copy2});
-        //this.wfs.trigger(Event.H264_DATA_PARSING,{data:copy2});
+        // var copy2 = new Uint8Array(0);
+        // this.wfs.trigger(Event.H264_DATA_PARSING,{data:copy2});
+        // this.wfs.trigger(Event.H264_DATA_PARSING,{data:copy2});
         this.buf = null;
-      } else this.buf = new Uint8Array(newBuffer);
+      } else {
+        this.buf = new Uint8Array(newBuffer);
+      }
 
       this.buf = new Uint8Array(event.data, 4);
-      //this.buf = new Uint8Array(event.data);
+      // this.buf = new Uint8Array(event.data);
       var buf_crc = new Uint8Array(event.data, 0, 4);
       var copy = new Uint8Array(this.buf);
 
@@ -2190,15 +2208,25 @@ var WebsocketLoader = function (_EventHandler) {
         this.wfs.trigger(_events2.default.WEBSOCKET_ATTACHED, { payload: copy });
       }
       if (this.mediaType === 'H264Raw') {
-        console.log(copy.length);
+        // console.log(copy.length);
         var crc16 = _crc2.default.crc16;
         var crc32 = _crc2.default.crc32;
         var crc_s = crc16(copy);
         var buf_crc_s = buf_crc.map(String.fromCharCode).join("");
-        if (String.fromCharCode(buf_crc[0]) == crc_s[0] && String.fromCharCode(buf_crc[1]) == crc_s[1] && String.fromCharCode(buf_crc[2]) == crc_s[2] && String.fromCharCode(buf_crc[3]) == crc_s[3]) {
-          //		console.log("equal");	
-        } else console.log("not equal");
+
+        /*
+        if(String.fromCharCode(buf_crc[0]) == crc_s[0] &&
+        String.fromCharCode(buf_crc[1]) == crc_s[1] &&
+        String.fromCharCode(buf_crc[2]) == crc_s[2] &&
+        String.fromCharCode(buf_crc[3]) == crc_s[3]){
+         // console.log("equal");	
+        }
+        else {
+          // console.log("not equal");
+        }
         // console.log(crc_s);
+        */
+
         this.wfs.trigger(_events2.default.H264_DATA_PARSING, { data: copy });
       }
     }
@@ -2210,7 +2238,8 @@ var WebsocketLoader = function (_EventHandler) {
   }, {
     key: 'onWebsocketMessageSending',
     value: function onWebsocketMessageSending(event) {
-      this.client.send(JSON.stringify({ t: event.commandType, c: event.channelName, v: event.commandValue }));
+      this.client.send(JSON.stringify({ t: event.commandType, v: event.commandValue }));
+      // this.client.send( JSON.stringify({ t: event.commandType, /*c:event.channelName,*/ v: event.commandValue  }) );
     }
   }]);
 
@@ -3967,7 +3996,7 @@ var Wfs = function () {
           debug: false,
           fLoader: undefined,
           loader: _xhrLoader2.default,
-          //loader: FetchLoader,
+          // loader: FetchLoader,
           fmp4FileUrl: 'xxxx.mp4',
           fragLoadingTimeOut: 20000,
           fragLoadingMaxRetry: 6,
@@ -4021,7 +4050,7 @@ var Wfs = function () {
 
     this.flowController = new _flowController2.default(this);
     this.bufferController = new _bufferController2.default(this);
-    //  this.fileLoader = new FileLoader(this);
+    // this.fileLoader = new FileLoader(this);
     this.websocketLoader = new _websocketLoader2.default(this);
     this.mediaType = undefined;
   }
@@ -4031,24 +4060,30 @@ var Wfs = function () {
     value: function destroy() {
       this.flowController.destroy();
       this.bufferController.destroy();
-      //   this.fileLoader.destroy();
+      // this.fileLoader.destroy();
       this.websocketLoader.destroy();
     }
+
+    // attachMedia(media, ip, port, /*channelName='chX',*/mediaType='H264Raw', websocketName='play2') { // 'H264Raw' 'FMp4'    
+
   }, {
     key: 'attachMedia',
-    value: function attachMedia(media) {
-      var channelName = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'chX';
-      var mediaType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'H264Raw';
-      var websocketName = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'play2';
+    value: function attachMedia(media, ip, port) {
+      var mediaType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'H264Raw';
+      var websocketName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 'play2';
       // 'H264Raw' 'FMp4'    
       this.mediaType = mediaType;
       this.media = media;
-      this.trigger(_events2.default.MEDIA_ATTACHING, { media: media, channelName: channelName, mediaType: mediaType, websocketName: websocketName });
+      this.trigger(_events2.default.MEDIA_ATTACHING, { media: media, ip: ip, port: port, /*channelName:channelName,*/mediaType: mediaType, websocketName: websocketName });
     }
+
+    // attachWebsocket(websocket,channelName) { 
+
   }, {
     key: 'attachWebsocket',
-    value: function attachWebsocket(websocket, channelName) {
-      this.trigger(_events2.default.WEBSOCKET_ATTACHING, { websocket: websocket, mediaType: this.mediaType, channelName: channelName });
+    value: function attachWebsocket(websocket, ip, port) {
+      this.trigger(_events2.default.WEBSOCKET_ATTACHING, { websocket: websocket, mediaType: this.mediaType, ip: ip, port: port });
+      // this.trigger(Event.WEBSOCKET_ATTACHING, {websocket: websocket, mediaType:this.mediaType, ip: ip, port: port/*channelName:channelName*/ });
     }
   }]);
 
