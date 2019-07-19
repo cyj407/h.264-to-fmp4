@@ -113,11 +113,12 @@ func (conn *Connection) appReadCommand2() {
             conn.file264DataName = "car.h264"
             conn.file264SizeName = "car.txt"
            }
-
+/*
            if u["c"].(string) =="ch2"{
             conn.file264DataName = "yyyyyyy.264"
             conn.file264SizeName = "yyyyyyy.txt"
            }
+*/		   
             go conn.app264Streaming()
         }
    
@@ -214,7 +215,6 @@ func (conn *Connection) app264Streaming() {
  
     tick := time.NewTicker(time.Millisecond * 30)
     flag := true 
-    flag2 := true
  
     for {
         select {
@@ -244,15 +244,8 @@ func (conn *Connection) app264Streaming() {
                     smallArray = nil 
                    //----------------------------------------- 
                     fileStart += offs
-		    if flag2{
-                      //  time.Sleep(300*time.Millisecond)
-                        flag2 = false    
-                    } else{
-                        //time.Sleep(500*time.Millisecond)
-                        flag2 = true
-                    }
-                } 
-        }
+        		}
+		}
         if !flag {
             break
         }
